@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Commands\CreatePostCommand;
+use App\Commands\Handlers\CreatePostHandler;
 use App\Exceptions\CommandHandlerNotFoundException;
 use App\Interfaces\CommandInterface;
 use App\Interfaces\CommandBusInterface;
@@ -9,7 +11,9 @@ use App\Interfaces\CommandHandlerInterface;
 
 class CommandBusService implements CommandBusInterface
 {
-    private const HANDLERS = [];
+    private const HANDLERS = [
+        CreatePostCommand::class => CreatePostHandler::class,
+    ];
 
     /**
      * @throws CommandHandlerNotFoundException

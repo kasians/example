@@ -17,4 +17,5 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([])->group(function () {
     Route::get('/posts', [PostController::class, 'getList']);
     Route::get('/posts/{id}', [PostController::class, 'get']);
+    Route::post('/posts', [PostController::class, 'create']);
 });
