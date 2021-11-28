@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Commands\CreatePostCommand;
+use App\Commands\UpdatePostCommand;
+use App\Constants\PostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Interfaces\CommandBusInterface;
@@ -58,6 +60,46 @@ class PostController extends Controller
         /** @var Post $post */
         $post = Post::query()->find($command->getId());
         $post->wasRecentlyCreated = true;
+
+        return new PostResource($post);
+    }
+
+    public function update(string $id, Request $request): PostResource
+    {
+        $validator = Validator::make(
+            [
+                'id' => $id,
+                'text' => $request->json('text'),
+                'name' => $request->json('name'),
+                'status' => $request->json('status'),
+            ],
+            [
+                'id' => ['required', 'uuid', 'exists:posts,id'],
+                'name' => ['required', 'string', 'max:255'],
+                'text' => ['required', 'string'],
+                'status' => [
+                    'required',
+                    'string',
+                    'in:' . implode(',', [
+                        PostStatus::DRAFT,
+                        PostStatus::ACTIVE,
+                        PostStatus::BLOCKED,
+                    ]),
+                ],
+            ]
+        );
+        $validator->validate();
+
+        $command = new UpdatePostCommand(
+            $id,
+            $request->json('name'),
+            $request->json('text'),
+            $request->json('status'),
+        );
+        $this->commandBus->handle($command);
+
+        /** @var Post $post */
+        $post = Post::query()->find($command->getId());
 
         return new PostResource($post);
     }

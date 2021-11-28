@@ -128,4 +128,98 @@ class PostControllerTest extends TestCase
             ],
         ];
     }
+
+    public function testUpdate(): void
+    {
+        /** @var Post $post */
+        $post = Post::factory()->create();
+
+        $response = $this->json('PUT', '/api/posts/' . $post->id, [
+            'name' => $this->faker->text,
+            'text' => $this->faker->text,
+            'status' => PostStatus::ACTIVE,
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'id',
+            'name',
+            'text',
+            'status',
+            'createdAt',
+            'updatedAt',
+        ]);
+    }
+
+    public function testUpdateValidation(): void
+    {
+        foreach ($this->postUpdateRequestValidationProvider() as [$id, $data, $validationErrors]) {
+            $response = $this->json('PUT', '/api/posts/' . $id, $data);
+
+            $response->assertUnprocessable();
+            $response->assertJsonValidationErrors($validationErrors);
+        }
+    }
+
+    private function postUpdateRequestValidationProvider(): Generator
+    {
+        yield [
+            'invalid-uuid',
+            [],
+            [
+                'id' => 'The id must be a valid UUID.',
+                'name' => 'The name field is required.',
+                'text' => 'The text field is required.',
+                'status' => 'The status field is required.',
+            ],
+        ];
+
+        yield [
+            $this->faker->uuid,
+            [],
+            [
+                'id' => 'The selected id is invalid.',
+                'name' => 'The name field is required.',
+                'text' => 'The text field is required.',
+                'status' => 'The status field is required.',
+            ],
+        ];
+
+        /** @var Post $post */
+        $post = Post::factory()->create();
+
+        yield [
+            $post->id,
+            [],
+            [
+                'name' => 'The name field is required.',
+                'text' => 'The text field is required.',
+                'status' => 'The status field is required.',
+            ],
+        ];
+
+        yield [
+            $post->id,
+            [
+                'name' => $this->faker->randomNumber(),
+                'text' => $this->faker->randomNumber(),
+                'status' => $this->faker->randomNumber(),
+            ],
+            [
+                'name' => 'The name must be a string.',
+                'text' => 'The text must be a string.',
+                'status' => 'The status must be a string.',
+            ],
+        ];
+
+        yield [
+            $post->id,
+            ['status' => 'invalid-status'],
+            [
+                'name' => 'The name field is required.',
+                'text' => 'The text field is required.',
+                'status' => 'The selected status is invalid.',
+            ],
+        ];
+    }
 }
