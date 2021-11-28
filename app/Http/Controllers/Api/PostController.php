@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Commands\CreatePostCommand;
+use App\Commands\DeletePostCommand;
 use App\Commands\UpdatePostCommand;
 use App\Constants\PostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Interfaces\CommandBusInterface;
 use App\Models\Post;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Facades\Validator;
@@ -102,5 +104,19 @@ class PostController extends Controller
         $post = Post::query()->find($command->getId());
 
         return new PostResource($post);
+    }
+
+    public function delete(string $id): JsonResponse
+    {
+        $validator = Validator::make(
+            ['id' => $id],
+            ['id' => ['required', 'uuid', 'exists:posts,id']]
+        );
+        $validator->validate();
+
+        $command = new DeletePostCommand($id);
+        $this->commandBus->handle($command);
+
+        return response()->json(['ok']);
     }
 }

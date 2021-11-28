@@ -222,4 +222,38 @@ class PostControllerTest extends TestCase
             ],
         ];
     }
+
+    public function testDelete(): void
+    {
+        /** @var Post $post */
+        $post = Post::factory()->create();
+
+        $response = $this->json('DELETE', '/api/posts/' . $post->id);
+
+        $response->assertOk();
+        $response->assertExactJson(['ok']);
+    }
+
+    public function testDeleteValidation(): void
+    {
+        foreach ($this->postDeleteRequestValidationProvider() as [$id, $validationErrors]) {
+            $response = $this->json('DELETE', '/api/posts/' . $id);
+
+            $response->assertUnprocessable();
+            $response->assertJsonValidationErrors($validationErrors);
+        }
+    }
+
+    private function postDeleteRequestValidationProvider(): Generator
+    {
+        yield [
+            'invalid-uuid',
+            ['id' => 'The id must be a valid UUID.'],
+        ];
+
+        yield [
+            $this->faker->uuid,
+            ['id' => 'The selected id is invalid.'],
+        ];
+    }
 }

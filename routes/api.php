@@ -19,4 +19,5 @@ Route::middleware([])->group(function () {
     Route::get('/posts/{id}', [PostController::class, 'get']);
     Route::post('/posts', [PostController::class, 'create']);
     Route::put('/posts/{id}', [PostController::class, 'update']);
+    Route::delete('/posts/{id}', [PostController::class, 'delete']);
 });
